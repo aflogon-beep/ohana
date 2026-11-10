@@ -259,11 +259,11 @@
           <div><small>CUÁNDO</small>${P.cuando}</div>
           <div><small>DURACIÓN</small>${P.duracion}</div>
           <div><small>PASAJEROS</small>${P.pasajeros}</div>
-          <div><small>OS ESPERAN</small>Mickey y Stitch ✦</div>
+          <div><small>OS ESPERAN</small>Mickey y Stitch</div>
         </div>
       </div>
       <div class="stub"><small>VÁLIDO PARA</small><b>5</b><small>DÍAS</small><b>4</b><small>NOCHES</small></div>`;
-    $('#finalMsg').innerHTML = `<div class="date">${C.fechaBoda}</div>` + C.mensajeFinal.map(l => `<div>${l}</div>`).join('') + `<div class="sig">${C.firma}</div>`;
+    $('#finalMsg').innerHTML = `<div class="date">${C.fechaBoda}</div>` + `<div class="body"><p>${C.mensajeFinal.slice(0, 2).join(' ')}</p></div>` + `<blockquote>${C.mensajeFinal.slice(2).join(' ')}</blockquote>` + `<div class="sig">${C.firma}</div>`;
     const img = $('#familyPhoto');
     img.onload = () => $('#polaroid').classList.remove('hidden');
     img.onerror = () => $('#polaroid').remove();
