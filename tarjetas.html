@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tarjetas Ohana</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #2b1a0e; --red: #8e1b12; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #3a2414; font-family: 'IM Fell English', Georgia, serif; color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .help { max-width: 190mm; margin: 16px auto; color: #f3e3c0; font-size: 16px; line-height: 1.5; padding: 0 16px; }
+  .help b { color: #ffd98a; }
+  .help button { font: 700 16px Cinzel, serif; padding: 10px 20px; border-radius: 999px; border: 2px solid #5a3507; background: linear-gradient(#fff1b8, #e9b247); cursor: pointer; }
+  .sheet { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 10mm; background: #fff; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 88mm; gap: 6mm; }
+  .card {
+    position: relative; isolation: isolate; padding: 8mm 7mm; text-align: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border: 1px dashed #bbb;
+  }
+  .card::before {
+    content: ''; position: absolute; inset: 2mm; z-index: -1;
+    background: radial-gradient(ellipse at 50% 40%, #fbf0d2 0%, #f0dcab 50%, #d7b072 85%, #a77a3e 100%);
+    box-shadow: inset 0 0 12mm rgba(110,60,15,.5);
+    filter: url(#rough);
+  }
+  .k { font: 900 9pt Cinzel, serif; letter-spacing: .35em; color: #5a3a1e; }
+  .n { font: 900 12pt Cinzel, serif; color: var(--red); margin-top: 2mm; letter-spacing: .15em; }
+  .t { font-style: italic; font-size: 13pt; margin: 1mm 0 3mm; }
+  .code {
+    font: 900 24pt 'Cinzel Decorative', serif; letter-spacing: .08em; color: var(--red);
+    border-top: 1.5px solid #5a3a1e; border-bottom: 1.5px solid #5a3a1e; padding: 2mm 4mm; margin: 1mm 0 3mm;
+  }
+  .i { font-size: 11pt; }
+  .where { position: absolute; bottom: 4mm; right: 5mm; font: 700 7pt Cinzel, serif; color: rgba(60,30,10,.45); }
+  svg.c { width: 16mm; height: 16mm; position: absolute; top: 4mm; left: 5mm; opacity: .55; }
+  @page { size: A4; margin: 0; }
+  @media print { body { background: #fff; } .help { display: none; } .sheet { margin: 0; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" seed="9"/><feDisplacementMap in="SourceGraphic" scale="10"/></filter></svg>
+<div class="help">
+  <p><b>Tarjetas de los escondites.</b> Imprime esta hoja (mejor en color), recorta por la línea discontinua y esconde cada tarjeta en su lugar. La esquina inferior derecha indica el escondite, por si acaso. ¡Que no la vean antes!</p>
+  <button onclick="print()">Imprimir</button>
+</div>
+<div class="sheet" id="sheet"></div>
+<script src="js/config.js"></script>
+<script>
+  const rose = '<svg class="c" viewBox="-50 -50 100 100"><circle r="44" fill="none" stroke="#3a2312" stroke-width="2"/><path d="M0,-44 L7,0 L0,0Z M0,44 L-7,0 L0,0Z M44,0 L0,7 L0,0Z M-44,0 L0,-7 L0,0Z" fill="#3a2312"/><path d="M0,-44 L-7,0 L0,0Z M0,44 L7,0 L0,0Z M44,0 L0,-7 L0,0Z M-44,0 L0,7 L0,0Z" fill="#c9a467"/></svg>';
+  document.getElementById('sheet').innerHTML = OHANA.pistas.map((p, i) => `
+    <div class="card">${rose}
+      <div class="k">EXPEDICIÓN OHANA</div>
+      <div class="n">FRAGMENTO ${i + 1}</div>
+      <div class="t">${p.titulo}</div>
+      <div class="code">${p.codigo}</div>
+      <div class="i">Escribid este código secreto en la tablet</div>
+      <div class="where">${i + 1} · ${p.lugar}</div>
+    </div>`).join('');
+</script>
+</body>
+</html>

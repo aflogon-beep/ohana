@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#120a05">
+<meta name="mobile-web-app-capable" content="yes">
+<title>La Expedición Ohana</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700;900&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Filtros SVG globales y el arte del mapa (se reutiliza en piezas y puzzle) -->
+<svg id="globalDefs" width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="14" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="inkBleed" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1.6"/>
+    </filter>
+  </defs>
+</svg>
+
+<div id="ambient" aria-hidden="true">
+  <div class="bg-base"></div>
+  <div class="rays"></div>
+  <div class="torch torch-l"></div>
+  <div class="torch torch-r"></div>
+  <canvas id="dust"></canvas>
+  <div class="vignette"></div>
+</div>
+
+<!-- HUD -->
+<header id="hud" class="hidden">
+  <button id="parentBtn" class="hud-compass" aria-label="Brújula">
+    <svg viewBox="0 0 100 100"><use href="#compassIcon"/></svg>
+  </button>
+  <div id="medals"></div>
+  <button id="soundBtn" class="hud-sound" aria-label="Sonido"></button>
+</header>
+
+<main id="stage">
+
+  <!-- INTRO -->
+  <section id="s-intro" class="scene">
+    <div class="intro-compass" aria-hidden="true">
+      <svg viewBox="0 0 100 100"><use href="#compassIcon"/></svg>
+    </div>
+    <div id="introMascots"></div>
+    <div class="intro-content">
+      <p class="kicker">Una aventura para <span id="introNames"></span></p>
+      <h1 class="title-gold"><span>La Expedición</span><span class="big">Ohana</span></h1>
+      <div class="divider"><i></i><b>✦</b><i></i></div>
+      <p class="tagline">Seis enigmas. Seis fragmentos. Un tesoro.</p>
+      <button id="btnStart" class="btn-gold big">Comenzar la aventura</button>
+      <button id="btnRestart" class="btn-ghost hidden">Empezar desde el principio</button>
+    </div>
+  </section>
+
+  <!-- CARTA -->
+  <section id="s-story" class="scene">
+    <div class="parchment letter">
+      <div class="seal" aria-hidden="true"><span>O</span></div>
+      <div class="avatars" id="avatars"></div>
+      <div id="letterText" class="letter-text"></div>
+      <button id="btnAccept" class="btn-gold hidden">Aceptamos la misión</button>
+    </div>
+  </section>
+
+  <!-- PISTA -->
+  <section id="s-clue" class="scene">
+    <div class="parchment clue">
+      <p class="clue-num" id="clueNum"></p>
+      <h2 class="clue-title" id="clueTitle"></h2>
+      <div class="divider ink"><i></i><b>❦</b><i></i></div>
+      <div class="riddle" id="riddle"></div>
+      <div class="hints" id="hints"></div>
+      <button id="btnHint" class="btn-ink">✧ Necesitamos una ayuda</button>
+      <div id="clueMascot"></div>
+    </div>
+    <form id="codeForm" class="code-box" autocomplete="off">
+      <label for="codeInput">Código secreto del fragmento</label>
+      <div class="code-row">
+        <input id="codeInput" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="16" placeholder="· · · · · ·">
+        <button type="submit" class="btn-gold">Descifrar</button>
+      </div>
+      <p id="codeMsg" class="code-msg" aria-live="polite"></p>
+    </form>
+  </section>
+
+  <!-- PUZZLE -->
+  <section id="s-puzzle" class="scene">
+    <div class="puzzle-head">
+      <h2 class="title-gold small">Reconstruid el mapa</h2>
+      <p class="sub">Arrastrad cada fragmento a su sitio</p>
+    </div>
+    <div id="puzzleWrap"></div>
+    <button id="btnToChest" class="btn-gold big hidden">¡Seguir el mapa hasta la X!</button>
+  </section>
+
+  <!-- COFRE -->
+  <section id="s-chest" class="scene">
+    <div class="chest-head">
+      <h2 class="title-gold small" id="chestTitle">El Cofre Ohana</h2>
+      <p class="sub" id="chestSub">Está sellado con cadenas antiguas… ¡Golpeadlo entre los dos para romperlas!</p>
+    </div>
+    <div id="chestWrap">
+      <div class="chest-rays"></div>
+      <div id="chestSvgHolder"></div>
+    </div>
+    <div class="tap-counter">
+      <svg viewBox="0 0 120 120" class="ring">
+        <circle cx="60" cy="60" r="52" class="ring-bg"/>
+        <circle cx="60" cy="60" r="52" class="ring-fg" id="ringFg"/>
+      </svg>
+      <div class="tap-num"><b id="tapNum">100</b><span>toques</span></div>
+    </div>
+    <div id="flash"></div>
+  </section>
+
+  <!-- PREMIO -->
+  <section id="s-reveal" class="scene">
+    <div class="night"></div>
+    <div class="castle" id="castle"></div>
+    <div class="reveal-content">
+      <p class="kicker reveal-step">El tesoro de la Expedición Ohana es…</p>
+      <h1 class="title-gold reveal-title reveal-step" id="revealTitle"></h1>
+      <div class="ticket reveal-step" id="ticket"></div>
+      <div class="mascot-row reveal-step" id="revealMascots"></div>
+      <figure class="polaroid reveal-step hidden" id="polaroid">
+        <img id="familyPhoto" alt="La familia Ohana">
+        <figcaption>Familia Ohana</figcaption>
+      </figure>
+      <div class="final-msg reveal-step" id="finalMsg"></div>
+    </div>
+  </section>
+</main>
+
+<!-- Overlay de fragmento conseguido -->
+<div id="pieceOverlay" class="overlay hidden">
+  <div class="ov-rays"></div>
+  <div class="ov-content">
+    <p class="kicker" id="ovKicker"></p>
+    <div class="ov-piece" id="ovPiece"></div>
+    <div class="ov-word" id="ovWord"></div>
+    <div class="ov-phrase" id="ovPhrase"></div>
+    <button id="btnNext" class="btn-gold big"></button>
+  </div>
+</div>
+
+<!-- Panel de padres -->
+<div id="parentPanel" class="overlay hidden">
+  <div class="parchment panel">
+    <h3>Cuaderno del jefe de expedición</h3>
+    <div id="pinStep">
+      <p>Introduce el PIN</p>
+      <input id="pinInput" type="password" inputmode="numeric" maxlength="6">
+      <button id="pinOk" class="btn-ink">Entrar</button>
+    </div>
+    <div id="parentTools" class="hidden">
+      <div id="parentCodes"></div>
+      <div class="tools">
+        <button data-act="skip" class="btn-ink">Saltar pista actual</button>
+        <button data-act="puzzle" class="btn-ink">Ir al puzzle</button>
+        <button data-act="chest" class="btn-ink">Ir al cofre</button>
+        <button data-act="reveal" class="btn-ink">Ir al premio</button>
+        <button data-act="reset" class="btn-ink danger">Reiniciar todo</button>
+      </div>
+    </div>
+    <button id="parentClose" class="btn-ghost dark">Cerrar</button>
+  </div>
+</div>
+
+<canvas id="fx"></canvas>
+
+<script src="js/config.js"></script>
+<script src="js/textures.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/map.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/chest.js"></script>
+<script src="js/puzzle.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
