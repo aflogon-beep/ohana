@@ -474,8 +474,8 @@ button { font: inherit; cursor: pointer; }
   margin: 34px 0 0; background: #fbf7ee; padding: 14px 14px 46px; transform: rotate(-3deg);
   box-shadow: 0 25px 50px rgba(0,0,0,.6); width: min(440px, 86vw);
 }
-.polaroid img { display: block; width: 100%; aspect-ratio: 4/3; object-fit: cover; background: #222; }
-.polaroid figcaption { font-family: var(--font-body); font-style: italic; color: #333; text-align: center; margin-top: 10px; font-size: 22px; }
+.polaroid img { display: block; width: 100%; height: auto; background: #222; }
+.polaroid figcaption { font-family: 'Great Vibes', cursive; color: #4a3520; text-align: center; margin-top: 12px; font-size: 36px; line-height: 1; }
 .final-msg {
   position: relative; margin-top: 40px; max-width: 720px; width: 100%;
   padding: clamp(26px, 5vmin, 44px) clamp(22px, 6vmin, 56px);
