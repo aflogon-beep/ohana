@@ -34,7 +34,7 @@ window.OHANA = {
     'Porque Ohana significa familia,',
     'y familia significa que nadie se queda atrás ni se olvida.'
   ],
-  firma: 'Con todo nuestro amor',
+  firma: 'Con todo nuestro amor,<br>Julia y Alberto',
 
   toquesCofre: 100,
   pinPadres: '1911',
