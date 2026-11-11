@@ -10,10 +10,10 @@ window.Puzzle = (function () {
     wrap.appendChild(svg);
 
     const board = `
-      <rect x="-14" y="-14" width="${W + 28}" height="${H + 28}" rx="10" fill="#140a04" stroke="#c88a1f" stroke-width="4"/>
-      <rect x="-4" y="-4" width="${W + 8}" height="${H + 8}" fill="none" stroke="#6b4210" stroke-width="2"/>
-      <use href="#mapArt" opacity=".14"/>
-      ${pieces.map(p => `<path d="${p.d}" fill="none" stroke="#f2c24b" stroke-width="2" stroke-dasharray="8 8" opacity=".35"/>`).join('')}`;
+      <rect class="pz-turn" x="-26" y="-26" width="${W + 52}" height="${H + 52}" rx="34"/>
+      <rect class="pz-frame" x="-14" y="-14" width="${W + 28}" height="${H + 28}" rx="22"/>
+      <use href="#mapArt" opacity=".16"/>
+      ${pieces.map(p => `<path class="pz-slot" d="${p.d}"/>`).join('')}`;
     svg.innerHTML = `<g id="pzBoard">${board}</g><g id="pzLocked"></g><g id="pzLoose"></g><g id="pzTop"></g>`;
     const gLocked = svg.querySelector('#pzLocked'), gLoose = svg.querySelector('#pzLoose');
 
@@ -23,7 +23,7 @@ window.Puzzle = (function () {
       g.setAttribute('class', 'piece');
       g.dataset.i = i;
       g.innerHTML = `
-        <path class="shadow" d="${p.d}" transform="translate(10 16)" fill="#000" opacity=".45"/>
+        <path class="shadow" d="${p.d}" transform="translate(10 16)"/>
         <g clip-path="url(#pc${i})"><use href="#mapArt"/></g>
         <path class="outline" d="${p.d}"/>`;
       gLoose.appendChild(g);
@@ -103,6 +103,7 @@ window.Puzzle = (function () {
         try { navigator.vibrate && navigator.vibrate(30); } catch (e) {}
         const r = g.getBoundingClientRect();
         FX.sparks(r.left + r.width / 2, r.top + r.height / 2, 30, { speed: 7 });
+        opts.onPlaced && opts.onPlaced(st.filter(s => s.locked).length, st.length);
         if (st.every(s => s.locked)) finish();
       }
     };
@@ -112,9 +113,11 @@ window.Puzzle = (function () {
     function finish() {
       const top = svg.querySelector('#pzTop');
       top.innerHTML = `
-        <path d="${MapArt.trailD()}" fill="none" stroke="#ffcf5a" stroke-width="9" stroke-linecap="round" class="trail-draw" opacity=".9" style="filter:drop-shadow(0 0 8px #ffb02e)"/>
-        <g class="map-x" style="filter:drop-shadow(0 0 14px #ff5a2a)">
-          <circle cx="${MapArt.X.x}" cy="${MapArt.X.y}" r="58" fill="none" stroke="#ffcf5a" stroke-width="5" stroke-dasharray="6 10"/>
+        <path d="${MapArt.trailD()}" fill="none" stroke="#14234B" stroke-width="16" stroke-linecap="round" class="trail-draw"/>
+        <path d="${MapArt.trailD()}" fill="none" stroke="#FFC93C" stroke-width="9" stroke-linecap="round" class="trail-draw"/>
+        <g class="map-x">
+          <circle cx="${MapArt.X.x}" cy="${MapArt.X.y}" r="58" fill="none" stroke="#14234B" stroke-width="10" stroke-dasharray="6 12" stroke-linecap="round"/>
+          <circle cx="${MapArt.X.x}" cy="${MapArt.X.y}" r="58" fill="none" stroke="#FFC93C" stroke-width="5" stroke-dasharray="6 12" stroke-linecap="round"/>
         </g>`;
       Sound.play('mapDone');
       setTimeout(() => FX.confetti(90), 600);

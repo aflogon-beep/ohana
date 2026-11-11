@@ -4,42 +4,52 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tarjetas Ohana</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@700;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
 <style>
-  :root { --ink: #2b1a0e; --red: #8e1b12; }
+  @font-face { font-family: 'Fredoka'; src: url('fonts/fredoka.woff2') format('woff2'); font-weight: 300 700; }
+  @font-face { font-family: 'Nunito'; src: url('fonts/nunito.woff2') format('woff2'); font-weight: 200 1000; }
+  :root { --ink: #14234B; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: #3a2414; font-family: 'IM Fell English', Georgia, serif; color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .help { max-width: 190mm; margin: 16px auto; color: #f3e3c0; font-size: 16px; line-height: 1.5; padding: 0 16px; }
-  .help b { color: #ffd98a; }
-  .help button { font: 700 16px Cinzel, serif; padding: 10px 20px; border-radius: 999px; border: 2px solid #5a3507; background: linear-gradient(#fff1b8, #e9b247); cursor: pointer; }
-  .sheet { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 10mm; background: #fff; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 88mm; gap: 6mm; }
-  .card {
-    position: relative; isolation: isolate; padding: 8mm 7mm; text-align: center;
+  body { margin: 0; background: #7FD6F5; font-family: 'Nunito', system-ui, sans-serif; font-weight: 700; color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .help { max-width: 190mm; margin: 16px auto; font-size: 16px; line-height: 1.5; padding: 16px 20px; background: #fff; border: 3px solid var(--ink); border-radius: 20px; box-shadow: 0 6px 0 var(--ink); }
+  .help p { margin: 0 0 12px; }
+  .help button { font: 600 17px 'Fredoka', sans-serif; color: var(--ink); padding: 10px 24px; border-radius: 999px; border: 3px solid var(--ink); background: #FFC93C; box-shadow: 0 4px 0 var(--ink); cursor: pointer; }
+  .help button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+  .sheet { width: 210mm; min-height: 297mm; margin: 0 auto 20px; padding: 10mm; background: #fff; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 88mm; gap: 6mm; }
+  .card { position: relative; padding: 3mm; border: 1px dashed #b8c0d6; } /* línea de corte */
+  .card:nth-child(6n+1) { --c: #FF6B5E; --t: #FFE9E6; }
+  .card:nth-child(6n+2) { --c: #FF9F1C; --t: #FFF0D9; }
+  .card:nth-child(6n+3) { --c: #2FBF71; --t: #E2F7EA; }
+  .card:nth-child(6n+4) { --c: #18C5C9; --t: #DDF7F7; }
+  .card:nth-child(6n+5) { --c: #1B6FD8; --t: #E0ECFB; }
+  .card:nth-child(6n+6) { --c: #7B5CFF; --t: #ECE7FF; }
+  .in {
+    position: relative; height: 100%; overflow: hidden; text-align: center;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    border: 1px dashed #bbb;
+    padding: 9mm 6mm 6mm; border: 1.2mm solid var(--ink); border-radius: 7mm; background: var(--t);
   }
-  .card::before {
-    content: ''; position: absolute; inset: 2mm; z-index: -1;
-    background: radial-gradient(ellipse at 50% 40%, #fbf0d2 0%, #f0dcab 50%, #d7b072 85%, #a77a3e 100%);
-    box-shadow: inset 0 0 12mm rgba(110,60,15,.5);
-    filter: url(#rough);
+  .in::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 7mm; background: var(--c); border-bottom: 1mm solid var(--ink); }
+  .in::after { /* olas al pie */
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 7mm; opacity: .5;
+    background: radial-gradient(circle at 50% 100%, var(--c) 0 62%, transparent 64%) 0 0 / 12mm 14mm repeat-x;
   }
-  .k { font: 900 9pt Cinzel, serif; letter-spacing: .35em; color: #5a3a1e; }
-  .n { font: 900 12pt Cinzel, serif; color: var(--red); margin-top: 2mm; letter-spacing: .15em; }
-  .t { font-style: italic; font-size: 13pt; margin: 1mm 0 3mm; }
+  .k { font: 600 8.5pt 'Fredoka', sans-serif; letter-spacing: .22em; }
+  .n {
+    font: 700 11pt 'Fredoka', sans-serif; letter-spacing: .1em; color: #fff; background: var(--c);
+    border: .8mm solid var(--ink); border-radius: 99mm; padding: .8mm 5mm; margin-top: 2mm;
+  }
+  .t { font: 700 14pt 'Fredoka', sans-serif; margin: 2.5mm 0 2.5mm; line-height: 1.1; }
   .code {
-    font: 900 24pt 'Cinzel Decorative', serif; letter-spacing: .08em; color: var(--red);
-    border-top: 1.5px solid #5a3a1e; border-bottom: 1.5px solid #5a3a1e; padding: 2mm 4mm; margin: 1mm 0 3mm;
+    font: 700 23pt 'Fredoka', sans-serif; letter-spacing: .1em;
+    background: #fff; border: 1mm solid var(--ink); border-radius: 4mm; padding: 1.5mm 6mm; margin: 0 0 3mm;
+    box-shadow: 0 1.4mm 0 var(--ink);
   }
-  .i { font-size: 11pt; }
-  .where { position: absolute; bottom: 4mm; right: 5mm; font: 700 7pt Cinzel, serif; color: rgba(60,30,10,.45); }
-  svg.c { width: 16mm; height: 16mm; position: absolute; top: 4mm; left: 5mm; opacity: .55; }
+  .i { font-size: 10.5pt; position: relative; z-index: 1; }
+  .where { position: absolute; bottom: 1.6mm; right: 5mm; z-index: 1; font: 600 7pt 'Fredoka', sans-serif; color: rgba(20, 35, 75, .6); }
   @page { size: A4; margin: 0; }
   @media print { body { background: #fff; } .help { display: none; } .sheet { margin: 0; } }
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute"><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" seed="9"/><feDisplacementMap in="SourceGraphic" scale="10"/></filter></svg>
 <div class="help">
   <p><b>Tarjetas de los escondites.</b> Imprime esta hoja (mejor en color), recorta por la línea discontinua y esconde cada tarjeta en su lugar. La esquina inferior derecha indica el escondite, por si acaso. ¡Que no la vean antes!</p>
   <button onclick="print()">Imprimir</button>
@@ -47,16 +57,15 @@
 <div class="sheet" id="sheet"></div>
 <script src="js/config.js"></script>
 <script>
-  const rose = '<svg class="c" viewBox="-50 -50 100 100"><circle r="44" fill="none" stroke="#3a2312" stroke-width="2"/><path d="M0,-44 L7,0 L0,0Z M0,44 L-7,0 L0,0Z M44,0 L0,7 L0,0Z M-44,0 L0,-7 L0,0Z" fill="#3a2312"/><path d="M0,-44 L-7,0 L0,0Z M0,44 L7,0 L0,0Z M44,0 L0,-7 L0,0Z M-44,0 L0,7 L0,0Z" fill="#c9a467"/></svg>';
   document.getElementById('sheet').innerHTML = OHANA.pistas.map((p, i) => `
-    <div class="card">${rose}
+    <div class="card"><div class="in">
       <div class="k">EXPEDICIÓN OHANA</div>
       <div class="n">FRAGMENTO ${i + 1}</div>
       <div class="t">${p.titulo}</div>
       <div class="code">${p.codigo}</div>
       <div class="i">Escribid este código secreto en la tablet</div>
       <div class="where">${i + 1} · ${p.lugar}</div>
-    </div>`).join('');
+    </div></div>`).join('');
 </script>
 </body>
 </html>

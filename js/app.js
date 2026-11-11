@@ -23,9 +23,13 @@
   let current = null;
   function go(stage) {
     document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
-    $('#s-' + stage).classList.add('active');
+    const sc = $('#s-' + stage);
+    void sc.offsetWidth; // reinicia las animaciones de entrada aunque se repita escena
+    sc.classList.add('active');
     $('#hud').classList.toggle('hidden', ['intro', 'reveal'].includes(stage));
+    document.body.dataset.stage = stage; // la atmósfera (día, atardecer, noche) depende de la escena
     current = stage;
+    if (stage !== 'clue' && stage !== 'puzzle') setTurn(stage === 'chest' ? 'all' : null);
     if (stage !== 'intro') { S.stage = stage; save(); }
     ({ story: enterStory, clue: enterClue, puzzle: enterPuzzle, chest: enterChest, reveal: enterReveal }[stage] || (() => {}))();
     renderMedals();
@@ -40,6 +44,49 @@
   const soundIcon = () => { $('#soundBtn').textContent = Sound.enabled ? '♪' : '✕'; };
   soundIcon();
   $('#soundBtn').addEventListener('click', () => { Sound.toggle(); soundIcon(); });
+
+  /* ---------- Turnos ----------
+     Enigmas: el turno sale del número de pista, así que sobrevive a recargas y saltos.
+     Puzzle: cambia cada vez que encaja una pieza y continúa la alternancia de los enigmas. */
+  const J = C.jugadores, T = C.turnos || {};
+  const turnsOn = T.activo !== false && J.length > 1;
+  const first = Math.max(0, J.indexOf(T.empieza));
+  const PALETTE = ['#FF6B5E', '#12B5BA', '#7B5CFF', '#2FBF71'];
+  const colorOf = name => (C.colores && C.colores[name]) || PALETTE[Math.max(0, J.indexOf(name)) % PALETTE.length];
+  const playerAt = k => J[(first + k) % J.length];
+  const face = name => {
+    const src = C.avatares && C.avatares[name];
+    return src ? `<img src="${src}" alt="" onerror="this.replaceWith('${name[0]}')">` : name[0];
+  };
+  function setTurn(who) {
+    const chip = $('#turnChip');
+    const name = who === 'all' ? null : who;
+    chip.classList.toggle('hidden', !turnsOn || !who);
+    document.body.style.setProperty('--p', name && turnsOn ? colorOf(name) : 'var(--sun)');
+    if (!turnsOn || !who) return;
+    chip.innerHTML = name
+      ? `<span class="tc-av">${face(name)}</span><span class="tc-txt"><small>Turno de</small><b>${name}</b></span>`
+      : `<span class="tc-av">★</span><span class="tc-txt"><small>Turno de</small><b>¡Todos a la vez!</b></span>`;
+    chip.classList.remove('swap'); void chip.offsetWidth; chip.classList.add('swap');
+  }
+  // Cartel de cambio de turno: mientras se ve, la pantalla no responde (da tiempo a pasar la tablet)
+  let bannerT = 0;
+  async function announceTurn(name, sub = '', ms = 1700) {
+    if (!turnsOn) return;
+    const b = $('#turnBanner'), id = ++bannerT;
+    b.style.setProperty('--p', colorOf(name));
+    $('#tbAv').innerHTML = face(name);
+    $('#tbKicker').textContent = '¡Turno de';
+    $('#tbName').textContent = name + '!';
+    $('#tbSub').textContent = sub;
+    b.classList.remove('hidden', 'out');
+    Sound.play('turn');
+    await wait(ms);
+    if (id !== bannerT) return;
+    b.classList.add('out');
+    await wait(280);
+    if (id === bannerT) b.classList.add('hidden');
+  }
 
   /* ---------- Mascotas ---------- */
   const M = C.mascotas || [];
@@ -63,7 +110,7 @@
   /* ---------- Carta ---------- */
   function avatarHTML(name) {
     const src = C.avatares && C.avatares[name];
-    return `<div class="avatar"><div class="medallion">${src ? `<img src="${src}" alt="${name}" onerror="this.outerHTML='<div class=&quot;mono&quot;>${name[0]}</div>'">` : `<div class="mono">${name[0]}</div>`}</div>${name}</div>`;
+    return `<div class="avatar"><div class="medallion" style="--pc:${colorOf(name)}">${src ? `<img src="${src}" alt="${name}" onerror="this.outerHTML='<div class=&quot;mono&quot;>${name[0]}</div>'">` : `<div class="mono">${name[0]}</div>`}</div>${name}</div>`;
   }
   let storyDone = false;
   async function enterStory() {
@@ -92,7 +139,17 @@
   /* ---------- Pistas ---------- */
   async function enterClue() {
     if (S.clue >= N) return go('puzzle');
-    const P = C.pistas[S.clue];
+    const P = C.pistas[S.clue], idx = S.clue;
+    document.body.dataset.clue = idx % 6;
+    const cap = playerAt(idx), helper = playerAt(idx + 1);
+    $('#roles').classList.toggle('hidden', !turnsOn);
+    if (turnsOn) {
+      setTurn(cap);
+      $('#roles').innerHTML =
+        `<div class="role" style="--pc:${colorOf(cap)}"><span class="role-av">${face(cap)}</span><span><b>${cap}</b> lleva el timón:<br>lee el enigma y escribe el código</span></div>` +
+        `<div class="role" style="--pc:${colorOf(helper)}"><span class="role-av">${face(helper)}</span><span><b>${helper}</b> es su mano derecha:<br>decide si pedimos una ayuda</span></div>`;
+      $('#codeLabel').textContent = `Código secreto · escribe ${cap}`;
+    }
     $('#clueNum').textContent = `Fragmento ${S.clue + 1} de ${N}`;
     $('#clueTitle').textContent = P.titulo;
     $('#riddle').innerHTML = P.enigma.map(l => `<p>${l}</p>`).join('');
@@ -100,20 +157,22 @@
     $('#clueMascot').innerHTML = mascot(M[S.clue % Math.max(1, M.length)], 'm-clue');
     $('#codeInput').value = ''; $('#codeMsg').textContent = ''; $('#codeMsg').className = 'code-msg';
     const lines = [...document.querySelectorAll('#riddle p')];
-    for (let i = 0; i < lines.length; i++) { await wait(i ? 650 : 500); lines[i].classList.add('on'); }
+    if (turnsOn) await announceTurn(cap, `Lee el enigma en voz alta y escribe el código. ${helper} decide las ayudas.`, 2400);
+    for (let i = 0; i < lines.length; i++) { await wait(i ? 650 : 500); if (S.clue !== idx || current !== 'clue') return; lines[i].classList.add('on'); }
   }
   function renderHints() {
     const P = C.pistas[S.clue], n = S.hints[S.clue] || 0;
     $('#hints').innerHTML = P.ayudas.slice(0, n).map((h, i) => `<div class="hint"><b>Ayuda ${i + 1}:</b> ${h}</div>`).join('');
     $('#btnHint').classList.toggle('hidden', n >= P.ayudas.length);
-    $('#btnHint').textContent = n === 0 ? '✧ Necesitamos una ayuda' : '✧ Necesitamos otra ayuda';
+    const who = turnsOn ? playerAt(S.clue + 1) + ': ' : '';
+    $('#btnHint').textContent = `✧ ${who}${n === 0 ? (who ? 'pedir una ayuda' : 'Necesitamos una ayuda') : (who ? 'pedir otra ayuda' : 'Necesitamos otra ayuda')}`;
   }
   $('#btnHint').addEventListener('click', () => {
     S.hints[S.clue] = (S.hints[S.clue] || 0) + 1; save();
     Sound.play('hint'); renderHints();
   });
   $('#codeInput').addEventListener('input', () => Sound.play('key'));
-  const BAD = ['Ese código no abre nada… seguid buscando.', 'Las runas no brillan. Revisad bien las letras.', 'El mapa no reconoce ese código. ¿Seguro que es aquí?'];
+  const BAD = ['Ese código no abre nada… seguid buscando.', 'Casi… revisad bien las letras.', 'El mapa no reconoce ese código. ¿Seguro que es aquí?'];
   let badN = 0;
   $('#codeForm').addEventListener('submit', ev => {
     ev.preventDefault();
@@ -122,7 +181,7 @@
     const P = C.pistas[S.clue], msg = $('#codeMsg');
     if (v === norm(P.codigo)) {
       $('#codeInput').blur();
-      msg.className = 'code-msg good'; msg.textContent = '¡Las runas brillan!';
+      msg.className = 'code-msg good'; msg.textContent = '¡Código correcto!';
       Sound.play('correct');
       const r = $('#codeInput').getBoundingClientRect();
       FX.sparks(r.left + r.width / 2, r.top + r.height / 2, 50, { speed: 8 });
@@ -144,7 +203,7 @@
     $('#ovPiece').innerHTML = MapArt.pieceSVG(i);
     $('#ovWord').textContent = C.palabras[i] || '';
     const words = C.palabras.slice(0, i + 1);
-    $('#ovPhrase').innerHTML = 'Palabras del pergamino: ' + words.map((w, k) => k === i ? `<em>${w}</em>` : w).join(' · ') + (last ? '…' : '');
+    $('#ovPhrase').innerHTML = 'Palabras del mapa: ' + words.map((w, k) => k === i ? `<em>${w}</em>` : w).join(' · ') + (last ? '…' : '');
     $('#btnNext').textContent = last ? '¡Reconstruir el mapa!' : 'Siguiente enigma';
     const ov = $('#pieceOverlay');
     ov.classList.remove('hidden');
@@ -164,9 +223,23 @@
   let puzzle = null;
   function enterPuzzle() {
     $('#btnToChest').classList.add('hidden');
+    const total = MapArt.pieces.length;
+    const puzzleTurn = placed => {
+      const who = playerAt(N + placed);
+      setTurn(who);
+      $('#puzzleSub').textContent = turnsOn ? `${who}, arrastra un fragmento a su sitio` : 'Arrastrad cada fragmento a su sitio';
+      return who;
+    };
+    const starter = puzzleTurn(0);
+    announceTurn(starter, 'Coloca una pieza del mapa. Cuando encaje, cambia el turno.', 2200);
     requestAnimationFrame(() => {
       window.__pz = puzzle = Puzzle.mount($('#puzzleWrap'), {
-        onDone() { $('#btnToChest').classList.remove('hidden'); $('#btnToChest').classList.add('pulse'); }
+        onPlaced(placed) {
+          if (placed >= total) { setTurn(null); $('#puzzleSub').textContent = '¡Mapa completo!'; return; }
+          const who = puzzleTurn(placed);
+          setTimeout(() => announceTurn(who, `Quedan ${total - placed} ${total - placed === 1 ? 'pieza' : 'piezas'}`, 1300), 450);
+        },
+        onDone() { setTurn(null); $('#puzzleSub').textContent = '¡Mapa completo!'; $('#btnToChest').classList.remove('hidden'); $('#btnToChest').classList.add('pulse'); }
       });
     });
   }
@@ -174,7 +247,7 @@
 
   /* ---------- Cofre ---------- */
   const MILESTONES = [
-    [0, `Está sellado con cadenas antiguas… ¡${C.jugadores.join(' y ')}, golpeadlo a la vez para romperlas!`],
+    [0, `Está sellado con cadenas… ¡${C.jugadores.join(' y ')}, golpeadlo a la vez para romperlas!`],
     [10, '¡Se ha movido! Algo hay ahí dentro…'],
     [25, '¡Más fuerte, exploradores!'],
     [34, '¡CRACK! ¡Una cadena rota!'],

@@ -1,30 +1,39 @@
-/* Partículas: polvo ambiental, chispas, confeti y fuegos artificiales */
+/* Partículas: pétalos ambientales, chispas, confeti y fuegos artificiales */
 window.FX = (function () {
   const DPR = Math.min(window.devicePixelRatio || 1, 2);
 
-  /* ---------- Polvo dorado ambiental ---------- */
+  /* ---------- Pétalos ambientales (sprites pre-dibujados: barato de pintar) ---------- */
   const dc = document.getElementById('dust'), dg = dc.getContext('2d');
+  const PETAL_COLS = ['#ffffff', '#FF8FB8', '#FFC93C', '#FFD6E4'];
+  const sprites = PETAL_COLS.map(col => {
+    const s = document.createElement('canvas'); s.width = s.height = 32;
+    const x = s.getContext('2d');
+    x.translate(16, 16); x.fillStyle = col; x.globalAlpha = 0.9;
+    x.beginPath(); x.moveTo(0, -13); x.bezierCurveTo(12, -8, 10, 9, 0, 13); x.bezierCurveTo(-10, 9, -12, -8, 0, -13); x.fill();
+    return s;
+  });
   let motes = [];
   function sizeDust() {
     dc.width = innerWidth * DPR; dc.height = innerHeight * DPR;
-    const n = Math.round(innerWidth * innerHeight / 14000);
-    motes = Array.from({ length: n }, () => ({
+    const n = Math.min(34, Math.round(innerWidth * innerHeight / 38000));
+    motes = Array.from({ length: n }, (_, i) => ({
       x: Math.random() * dc.width, y: Math.random() * dc.height,
-      r: (Math.random() * 1.8 + 0.4) * DPR, vx: (Math.random() - 0.5) * 0.15 * DPR, vy: -(Math.random() * 0.25 + 0.05) * DPR,
-      p: Math.random() * 6.28, s: Math.random() * 0.02 + 0.005
+      r: (Math.random() * 7 + 6) * DPR, vx: (Math.random() * 0.35 + 0.15) * DPR, vy: (Math.random() * 0.35 + 0.2) * DPR,
+      p: Math.random() * 6.28, s: Math.random() * 0.02 + 0.008, k: i % sprites.length
     }));
   }
   sizeDust();
   addEventListener('resize', () => { sizeDust(); sizeFx(); });
   function drawDust() {
+    dg.setTransform(1, 0, 0, 1, 0, 0);
     dg.clearRect(0, 0, dc.width, dc.height);
     for (const m of motes) {
-      m.p += m.s; m.x += m.vx + Math.sin(m.p) * 0.2; m.y += m.vy;
-      if (m.y < -10) { m.y = dc.height + 10; m.x = Math.random() * dc.width; }
-      const a = 0.25 + Math.sin(m.p * 1.7) * 0.25 + 0.25;
-      const gr = dg.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.r * 4);
-      gr.addColorStop(0, `rgba(255,225,150,${a})`); gr.addColorStop(1, 'rgba(255,200,100,0)');
-      dg.fillStyle = gr; dg.beginPath(); dg.arc(m.x, m.y, m.r * 4, 0, 6.283); dg.fill();
+      m.p += m.s; m.x += m.vx + Math.sin(m.p) * 0.5 * DPR; m.y += m.vy;
+      if (m.y > dc.height + 20) { m.y = -20; m.x = Math.random() * dc.width; }
+      if (m.x > dc.width + 20) m.x = -20;
+      const c = Math.cos(m.p * 1.3), s = Math.sin(m.p * 1.3), k = m.r / 16;
+      dg.setTransform(c * k, s * k, -s * k * Math.cos(m.p), c * k * Math.cos(m.p), m.x, m.y);
+      dg.drawImage(sprites[m.k], -16, -16);
     }
   }
 
@@ -34,19 +43,20 @@ window.FX = (function () {
   sizeFx();
   let parts = [], rockets = [], fireworksOn = false, fwTimer = 0;
 
+  const SPARK_COLS = ['#FFC93C', '#FF6B5E', '#18C5C9', '#2FBF71', '#FF8FB8', '#ffffff', '#7B5CFF'];
   function sparks(x, y, n = 18, opt = {}) {
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2, v = (opt.speed || 6) * (0.4 + Math.random());
       parts.push({
         x: x * DPR, y: y * DPR, vx: Math.cos(a) * v * DPR, vy: Math.sin(a) * v * DPR - (opt.up || 2) * DPR,
-        life: 1, decay: 0.012 + Math.random() * 0.02, size: (opt.size || 2.5) * (0.5 + Math.random()) * DPR,
-        color: opt.colors ? opt.colors[i % opt.colors.length] : `hsl(${40 + Math.random() * 15},100%,${60 + Math.random() * 30}%)`,
+        life: 1, decay: 0.012 + Math.random() * 0.02, size: (opt.size || 3.4) * (0.5 + Math.random()) * DPR,
+        color: (opt.colors || SPARK_COLS)[i % (opt.colors || SPARK_COLS).length],
         g: (opt.gravity ?? 0.18) * DPR, type: 'spark', drag: 0.97
       });
     }
   }
   function confetti(n = 160) {
-    const cols = ['#f2c24b', '#fff3c0', '#e8414a', '#3fa7d6', '#ffffff', '#ff8ac6', '#7bd389'];
+    const cols = ['#FFC93C', '#FF6B5E', '#18C5C9', '#2FBF71', '#ffffff', '#FF8FB8', '#7B5CFF'];
     for (let i = 0; i < n; i++) {
       parts.push({
         x: Math.random() * c.width, y: -20 * DPR - Math.random() * c.height * 0.5,
@@ -96,8 +106,9 @@ window.FX = (function () {
 
   function drawFx() {
     g.clearRect(0, 0, c.width, c.height);
+    const BLEND = fireworksOn ? 'lighter' : 'source-over'; // aditiva solo de noche: sobre cielo claro quemaría a blanco
     if (fireworksOn && --fwTimer <= 0) { launch(); fwTimer = 35 + Math.random() * 55; }
-    g.globalCompositeOperation = 'lighter';
+    g.globalCompositeOperation = BLEND;
     for (let i = rockets.length - 1; i >= 0; i--) {
       const r = rockets[i];
       r.x += r.vx; r.y += r.vy; r.vy += 0.12 * DPR;
@@ -113,7 +124,7 @@ window.FX = (function () {
         p.rot += p.vr; p.wob += 0.1;
         g.save(); g.translate(p.x + Math.sin(p.wob) * 8, p.y); g.rotate(p.rot); g.scale(1, Math.cos(p.wob * 1.3));
         g.fillStyle = p.color; g.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2); g.restore();
-        g.globalCompositeOperation = 'lighter';
+        g.globalCompositeOperation = BLEND;
       } else if (p.type === 'flash') {
         const gr = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
         gr.addColorStop(0, `rgba(255,255,240,${p.life * 0.8})`); gr.addColorStop(1, 'rgba(255,200,120,0)');
@@ -132,7 +143,7 @@ window.FX = (function () {
   let frame = 0;
   (function loop() {
     frame++;
-    if (frame % 2 === 0 || parts.length) drawDust();
+    if (frame % 2 === 0) drawDust();
     drawFx();
     requestAnimationFrame(loop);
   })();
