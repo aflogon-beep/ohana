@@ -280,45 +280,96 @@
     });
   }
 
-  /* ---------- Premio ---------- */
-  function castleSVG() {
-    const R = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
-    const tower = (x, base, w, h, roof, fill, lit) => {
-      let o = `<rect x="${x - w / 2}" y="${base - h}" width="${w}" height="${h}" fill="${fill}"/>`;
-      o += `<path d="M${x - w / 2 - 6},${base - h} L${x},${base - h - roof} L${x + w / 2 + 6},${base - h}Z" fill="${fill}"/>`;
-      o += `<path d="M${x},${base - h - roof} v-22" stroke="${fill}" stroke-width="2"/><path d="M${x},${base - h - roof - 22} l16,5 l-16,5z" fill="#ff7aa8" opacity=".9"/>`;
-      if (lit) for (let i = 0; i < 3; i++) if (R() < 0.75) o += `<rect x="${x - 3}" y="${base - h + 18 + i * 30}" width="6" height="12" rx="3" fill="#ffd98a" opacity=".9"/>`;
-      return o;
+  /* ---------- Premio: parque de atracciones de día ---------- */
+  function parkSVG() {
+    const INK = '#14234B', G = 520; // G = línea del suelo
+    const o = (w = 4) => `stroke="${INK}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"`;
+    const flag = (x, y, col) => `<path d="M${x},${y} v-30" ${o(3)}/><path class="pk-flag" d="M${x},${y - 30} l22,7 l-22,7z" fill="${col}" ${o(2.5)}/>`;
+    const tower = (x, w, h, roof, wall, top, fl) => {
+      const y = G - h;
+      let s = `<rect x="${x - w / 2}" y="${y}" width="${w}" height="${h}" fill="${wall}" ${o()}/>`;
+      s += `<rect x="${x - w / 2 - 7}" y="${y - 4}" width="${w + 14}" height="14" rx="5" fill="#fff" ${o()}/>`;
+      s += `<path d="M${x - w / 2 - 9},${y - 4} L${x},${y - roof} L${x + w / 2 + 9},${y - 4}Z" fill="${top}" ${o()}/>`;
+      s += `<circle cx="${x}" cy="${y - roof}" r="6" fill="#FFC93C" ${o(3)}/>`;
+      for (let wy = y + 30; wy < G - 50; wy += 62) s += `<rect x="${x - 7}" y="${wy}" width="14" height="24" rx="7" fill="#3D8BF0" ${o(3)}/>`;
+      return s + (fl ? flag(x, y - roof - 5, fl) : '');
     };
-    let s = `<svg viewBox="0 0 1200 500" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="csA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a6e"/><stop offset="1" stop-color="#1a1240"/></linearGradient>
-      <linearGradient id="csB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#24184e"/><stop offset="1" stop-color="#0d0828"/></linearGradient>
-      <radialGradient id="csGlow" cx="50%" cy="80%" r="50%"><stop offset="0" stop-color="#ffb3d1" stop-opacity=".55"/><stop offset="1" stop-color="#ffb3d1" stop-opacity="0"/></radialGradient></defs>
-      <ellipse cx="600" cy="420" rx="520" ry="200" fill="url(#csGlow)"/>`;
-    // fondo
-    [[380, 330, 34, 150, 70], [820, 330, 34, 150, 70], [470, 330, 30, 210, 80], [730, 330, 30, 210, 80]].forEach(t => s += tower(t[0], t[1] + 100, t[2], t[3], t[4], 'url(#csA)', true));
-    // cuerpo principal
-    s += `<rect x="430" y="300" width="340" height="130" fill="url(#csB)"/>`;
-    for (let x = 430; x < 770; x += 20) s += `<rect x="${x}" y="290" width="12" height="12" fill="url(#csB)"/>`;
-    s += tower(600, 330, 70, 220, 120, 'url(#csB)', true);
-    s += tower(540, 330, 40, 150, 90, 'url(#csB)', true) + tower(660, 330, 40, 150, 90, 'url(#csB)', true);
-    s += tower(440, 430, 44, 170, 80, 'url(#csB)', true) + tower(760, 430, 44, 170, 80, 'url(#csB)', true);
-    s += `<path d="M570,430 v-50 a30,30 0 0 1 60,0 v50z" fill="#ffcf7a" opacity=".85"/>`;
-    s += `<path d="M-3000,520 V440 Q300,400 600,428 Q900,400 4200,440 V520Z" fill="#0b0720"/></svg>`;
-    return s;
-  }
-  function stars() {
-    let h = '';
-    for (let i = 0; i < 140; i++) h += `<circle cx="${(Math.random() * 100).toFixed(2)}%" cy="${(Math.random() * 70).toFixed(2)}%" r="${(Math.random() * 1.4 + 0.3).toFixed(2)}" fill="#fff" opacity="${(Math.random() * 0.7 + 0.2).toFixed(2)}"><animate attributeName="opacity" values="1;.2;1" dur="${(2 + Math.random() * 4).toFixed(1)}s" repeatCount="indefinite" begin="${(Math.random() * 3).toFixed(1)}s"/></circle>`;
-    return `<svg width="100%" height="100%" style="position:absolute;inset:0">${h}</svg>`;
+    const tree = (x, s = 1) => `<g transform="translate(${x} ${G}) scale(${s})"><path d="M0,0 v-34" stroke="#8A4B1E" stroke-width="10" stroke-linecap="round"/><circle cy="-58" r="30" fill="#2FBF71" ${o()}/><circle cx="-9" cy="-66" r="8" fill="#6BE08F"/></g>`;
+    const bez = (p, t) => { const u = 1 - t; return [0, 1].map(k => u * u * u * p[0][k] + 3 * u * u * t * p[1][k] + 3 * u * t * t * p[2][k] + t * t * t * p[3][k]); };
+    const COLS = ['#FF6B5E', '#FFC93C', '#2FBF71', '#18C5C9', '#7B5CFF', '#FF8FB8'];
+
+    let s = `<svg viewBox="0 0 1600 600" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">`;
+    // colinas y césped
+    s += `<ellipse cx="250" cy="560" rx="620" ry="130" fill="#8FE08A"/><ellipse cx="1380" cy="570" rx="640" ry="140" fill="#8FE08A"/>`;
+    s += `<rect x="-3000" y="${G}" width="7600" height="200" fill="#5FCF78"/><path d="M-3000,${G} H4600" stroke="${INK}" stroke-width="4"/>`;
+    s += `<path d="M690,600 Q760,548 770,${G} H830 Q840,548 910,600Z" fill="#FFE29A" ${o()}/>`;
+
+    // globos aerostáticos
+    const balloon = (x, y, a, b, cls) => `<g class="pk-balloon ${cls}" transform="translate(${x} ${y})"><g>
+      <path d="M-20,58 L-12,84 M20,58 L12,84" ${o(3)}/>
+      <path d="M0,-62 C52,-62 62,-6 26,56 H-26 C-62,-6 -52,-62 0,-62Z" fill="${a}" ${o()}/>
+      <path d="M0,-62 C22,-40 22,20 12,56 H-12 C-22,20 -22,-40 0,-62Z" fill="${b}" ${o(3)}/>
+      <rect x="-15" y="84" width="30" height="22" rx="5" fill="#D98A45" ${o()}/></g></g>`;
+    s += balloon(110, 70, '#FF6B5E', '#FFC93C', 'b1') + balloon(1490, 20, '#7B5CFF', '#FF8FB8', 'b2');
+
+    // noria
+    const wx = 285, wy = 285, wr = 180;
+    s += `<path d="M${wx},${wy} L${wx - 95},${G} M${wx},${wy} L${wx + 95},${G}" stroke="${INK}" stroke-width="18" stroke-linecap="round"/><path d="M${wx},${wy} L${wx - 95},${G} M${wx},${wy} L${wx + 95},${G}" stroke="#18C5C9" stroke-width="9" stroke-linecap="round"/>`;
+    s += `<g transform="translate(${wx} ${wy})"><g class="pk-wheel">`;
+    for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; s += `<path d="M0,0 L${(Math.cos(a) * wr).toFixed(1)},${(Math.sin(a) * wr).toFixed(1)}" ${o(5)}/>`; }
+    s += `<circle r="${wr}" fill="none" stroke="${INK}" stroke-width="16"/><circle r="${wr}" fill="none" stroke="#FF6B5E" stroke-width="8"/><circle r="${wr * 0.62}" fill="none" stroke="${INK}" stroke-width="9"/><circle r="${wr * 0.62}" fill="none" stroke="#FFC93C" stroke-width="4"/>`;
+    for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; s += `<circle cx="${(Math.cos(a) * wr).toFixed(1)}" cy="${(Math.sin(a) * wr).toFixed(1)}" r="24" fill="${COLS[i % 6]}" ${o()}/><circle cx="${(Math.cos(a) * wr - 7).toFixed(1)}" cy="${(Math.sin(a) * wr - 8).toFixed(1)}" r="6" fill="#fff" opacity=".8"/>`; }
+    s += `<circle r="26" fill="#FFC93C" ${o()}/><path d="M0,-13 L4,-4 L13,-3 L6,3 L8,12 L0,7 L-8,12 L-6,3 L-13,-3 L-4,-4Z" fill="#fff"/></g></g>`;
+    s += `<rect x="${wx - 120}" y="${G - 16}" width="240" height="22" rx="8" fill="#7B5CFF" ${o()}/>`;
+
+    // tiovivo
+    const cx = 520;
+    s += `<rect x="${cx - 76}" y="${G - 22}" width="152" height="24" rx="8" fill="#FFC93C" ${o()}/>`;
+    [-56, 0, 56].forEach((dx, i) => {
+      s += `<path d="M${cx + dx},${G - 128} V${G - 22}" stroke="${INK}" stroke-width="7"/><path d="M${cx + dx},${G - 128} V${G - 22}" stroke="#fff" stroke-width="3"/>`;
+      s += `<g class="pk-horse h${i}"><ellipse cx="${cx + dx}" cy="${G - 62}" rx="19" ry="11" fill="${['#FF8FB8', '#fff', '#18C5C9'][i]}" ${o(3)}/><circle cx="${cx + dx + 17}" cy="${G - 76}" r="9" fill="${['#FF8FB8', '#fff', '#18C5C9'][i]}" ${o(3)}/></g>`;
+    });
+    s += `<path d="M${cx - 92},${G - 126} L${cx},${G - 196} L${cx + 92},${G - 126}Z" fill="#FF6B5E" ${o()}/><path d="M${cx - 32},${G - 126} L${cx},${G - 196} L${cx + 32},${G - 126}Z" fill="#fff" ${o(3)}/>`;
+    for (let i = 0; i < 6; i++) s += `<circle cx="${cx - 77 + i * 30.8}" cy="${G - 124}" r="15.4" fill="${i % 2 ? '#fff' : '#FFC93C'}" ${o(3)}/>`;
+    s += `<circle cx="${cx}" cy="${G - 200}" r="9" fill="#FFC93C" ${o(3)}/>` + flag(cx, G - 208, '#7B5CFF');
+
+    // montaña rusa
+    const segs = [[[1075, G], [1110, 280], [1170, 200], [1230, 250]], [[1230, 250], [1290, 300], [1280, 430], [1345, 430]], [[1345, 430], [1410, 430], [1400, 170], [1470, 160]], [[1470, 160], [1545, 150], [1570, 360], [1590, G]]];
+    const d = segs.map((p, i) => (i ? '' : `M${p[0]}`) + `C${p[1]} ${p[2]} ${p[3]}`).join('');
+    segs.forEach(p => { for (let t = 0.12; t < 1; t += 0.2) { const [x, y] = bez(p, t); if (y < G - 30) s += `<path d="M${x.toFixed(0)},${y.toFixed(0)} V${G}" stroke="${INK}" stroke-width="5" opacity=".75"/>`; } });
+    s += `<path id="pkTrack" d="${d}" fill="none" stroke="${INK}" stroke-width="16" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#FF8FB8" stroke-width="8" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#fff" stroke-width="2.5" stroke-dasharray="3 14" stroke-linecap="round"/>`;
+    [0, 0.34, 0.68].forEach((b, i) => { s += `<g><rect x="-17" y="-28" width="34" height="22" rx="7" fill="${['#FFC93C', '#18C5C9', '#7B5CFF'][i]}" ${o(3)}/><circle cx="0" cy="-32" r="7" fill="#FFD9B8" ${o(2.5)}/><animateMotion dur="9s" begin="-${b}s" repeatCount="indefinite" rotate="auto" keyPoints="0;1" keyTimes="0;1" calcMode="linear"><mpath href="#pkTrack"/></animateMotion></g>`; });
+
+    // árboles
+    s += tree(60, 1.1) + tree(650, .8) + tree(1010, .9) + tree(1050, .7) + tree(1560, 1.1);
+
+    // castillo
+    s += tower(712, 46, 300, 96, '#FFC2DA', '#18C5C9', '#FFC93C') + tower(888, 46, 300, 96, '#FFC2DA', '#18C5C9', '#FFC93C');
+    s += `<rect x="600" y="${G - 96}" width="400" height="96" fill="#FFD6E6" ${o()}/>`;
+    for (let x = 600; x < 1000; x += 40) s += `<rect x="${x + 4}" y="${G - 114}" width="24" height="20" rx="4" fill="#fff" ${o(3)}/>`;
+    s += tower(606, 50, 170, 80, '#FFB7D2', '#3D8BF0', '#FF6B5E') + tower(994, 50, 170, 80, '#FFB7D2', '#3D8BF0', '#FF6B5E');
+    s += `<rect x="690" y="${G - 210}" width="220" height="210" fill="#FFE3EE" ${o()}/>`;
+    for (let x = 690; x < 910; x += 44) s += `<rect x="${x + 6}" y="${G - 228}" width="32" height="20" rx="4" fill="#fff" ${o(3)}/>`;
+    s += tower(800, 84, 370, 150, '#FFF0F6', '#3D8BF0', '#FF6B5E');
+    s += tower(668, 54, 236, 92, '#FFB7D2', '#7B5CFF', '#FFC93C') + tower(932, 54, 236, 92, '#FFB7D2', '#7B5CFF', '#FFC93C');
+    s += `<path d="M762,${G} v-66 a38,38 0 0 1 76,0 v66z" fill="${INK}"/><path d="M772,${G} v-64 a28,28 0 0 1 56,0 v64z" fill="#FFC93C"/><path d="M800,${G - 92} V${G}" stroke="${INK}" stroke-width="3"/>`;
+    s += `<circle cx="800" cy="${G - 150}" r="24" fill="#fff" ${o()}/><path d="M800,${G - 150} v-14 M800,${G - 150} l10,6" ${o(3.5)}/>`;
+
+    // banderines
+    const bunting = (x1, y1, x2, y2, sag) => {
+      const q = t => [(1 - t) ** 2 * x1 + 2 * t * (1 - t) * (x1 + x2) / 2 + t * t * x2, (1 - t) ** 2 * y1 + 2 * t * (1 - t) * ((y1 + y2) / 2 + sag) + t * t * y2];
+      let b = `<path d="M${x1},${y1} Q${(x1 + x2) / 2},${(y1 + y2) / 2 + sag} ${x2},${y2}" fill="none" ${o(3)}/>`;
+      for (let i = 1; i < 9; i++) { const [x, y] = q(i / 9); b += `<path d="M${(x - 9).toFixed(0)},${y.toFixed(0)} h18 l-9,20z" fill="${COLS[i % 6]}" ${o(2.5)}/>`; }
+      return b;
+    };
+    s += bunting(380, G - 130, 580, G - 250, 60) + bunting(1020, G - 250, 1200, G - 150, 60);
+    return s + '</svg>';
   }
   let revealed = false;
   async function enterReveal() {
     if (revealed) return;
     revealed = true;
-    document.getElementById('ambient').style.opacity = '0';
-    $('.night').innerHTML = stars();
-    $('#castle').innerHTML = castleSVG();
+    $('#castle').innerHTML = parkSVG();
     Sound.music('fiesta');
     const P = C.premio;
     const title = `¡Nos vamos a ${P.destino}!`;
@@ -348,11 +399,16 @@
     await wait(1600);
     Sound.play('fanfare');
     steps[1].classList.add('on');
-    FX.startFireworks();
+    FX.startFireworks({ day: true });
     FX.confetti(220);
     await wait(2600);
     for (const s of steps.slice(2)) { s.classList.add('on'); await wait(1400); }
     setInterval(() => FX.confetti(60), 9000);
+    // aviso para bajar hasta el mensaje: el parque ocupa la primera pantalla
+    const sc = $('#s-reveal'), hint = $('#scrollHint');
+    if (sc.scrollHeight > sc.clientHeight + 80 && sc.scrollTop < 40) hint.classList.remove('hidden');
+    sc.addEventListener('scroll', () => { if (sc.scrollTop > 40) hint.classList.add('hidden'); }, { passive: true });
+    hint.addEventListener('click', () => $('#keepsake').scrollIntoView({ behavior: 'smooth', block: 'center' }));
   }
 
   /* ---------- Panel de padres ---------- */
