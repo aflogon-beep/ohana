@@ -106,26 +106,26 @@ window.MapArt = (function () {
   }
 
   const SPOTS = [
-    { x: 300, y: 300, name: 'Cueva del Invierno' },
-    { x: 520, y: 232, name: 'Trono de los Bostezos' },
-    { x: 815, y: 262, name: 'Lago Blanco' },
-    { x: 975, y: 470, name: 'Remolino del Cíclope' },
-    { x: 745, y: 600, name: 'Reino de Bolsillo' },
-    { x: 395, y: 575, name: 'Guardián de los Sueños' }
+    { x: 350, y: 240, name: 'Cueva del Invierno' },
+    { x: 600, y: 330, name: 'Trono de los Bostezos' },
+    { x: 855, y: 250, name: 'Lago Blanco' },
+    { x: 965, y: 515, name: 'Remolino del Cíclope' },
+    { x: 720, y: 585, name: 'Reino de Bolsillo' },
+    { x: 480, y: 575, name: 'Guardián de los Sueños' }
   ];
-  const X = { x: 600, y: 425 };
+  const X = { x: 600, y: 475 };
+  // La isla tiene forma de cabeza con dos orejas redondas: una pista del premio
+  const LAND = [[600, 480, 235], [345, 255, 135], [855, 255, 135]];
+  const landD = grow => LAND.map(([x, y, r]) => `M${x - r - grow},${y} a${r + grow},${r + grow} 0 1,0 ${2 * (r + grow)},0 a${r + grow},${r + grow} 0 1,0 ${-2 * (r + grow)},0Z`).join('');
+  const onLand = (x, y, grow) => LAND.some(([cx, cy, r]) => Math.hypot(x - cx, y - cy) < r + grow);
 
   function trailD() {
-    const p = [[SPOTS[0].x + 30, SPOTS[0].y + 30], [430, 300], [SPOTS[1].x + 10, SPOTS[1].y + 40], [680, 230], [SPOTS[2].x - 40, SPOTS[2].y + 50],
-      [900, 360], [SPOTS[3].x - 50, SPOTS[3].y + 10], [880, 560], [SPOTS[4].x + 10, SPOTS[4].y - 50], [560, 610], [SPOTS[5].x + 50, SPOTS[5].y - 40],
-      [470, 470], [X.x - 30, X.y + 10]];
+    const p = [[378, 296], [470, 322], [560, 388], [680, 340], [800, 308], [884, 402], [912, 500], [800, 566], [735, 548], [610, 622], [530, 590], [522, 510], [X.x - 30, X.y + 10]];
     return smoothOpen(p);
   }
 
   function buildArt() {
     const R = rng(2026);
-    const cx = 600, cy = 420, rx = 455, ry = 292;
-    const island = blob(cx, cy, rx, ry, 40, 0.13, 19);
     let s = '';
     // mar
     s += `<rect width="${W}" height="${H}" fill="url(#mSea)"/>`;
@@ -138,31 +138,31 @@ window.MapArt = (function () {
       s += `<line x1="1075" y1="675" x2="${f1(1075 + Math.cos(a) * 1500)}" y2="${f1(675 + Math.sin(a) * 1500)}" stroke="#ffffff" stroke-width="1.2" opacity=".16"/>`;
     }
     // olas
-    s += waves(R, (x, y) => (((x - cx) / (rx * 1.22)) ** 2 + ((y - cy) / (ry * 1.25)) ** 2 < 1) || (x < 420 && y < 150) || (x > 960 && y > 560));
+    s += waves(R, (x, y) => onLand(x, y, 60) || (x > 400 && x < 800 && y < 150) || (x > 960 && y > 560));
     // costa con líneas de agua
-    [1.16, 1.11, 1.065, 1.03].forEach((k, i) => {
-      s += `<path d="${island}" transform="translate(${cx} ${cy}) scale(${k}) translate(${-cx} ${-cy})" fill="${['#8DEBEF', '#B4F3F2', '#D9FAF3', '#FFE9A8'][i]}" opacity="${[.55, .7, .85, 1][i]}"/>`;
+    [56, 40, 25, 11].forEach((g, i) => {
+      s += `<path d="${landD(g)}" fill="${['#8DEBEF', '#B4F3F2', '#D9FAF3', '#FFE9A8'][i]}" opacity="${[.55, .7, .85, 1][i]}"/>`;
     });
-    s += `<path d="${island}" fill="url(#mLand)" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>`;
+    s += `<path d="${landD(0)}" fill="none" stroke="${INK}" stroke-width="7" stroke-linejoin="round"/><path d="${landD(0)}" fill="url(#mLand)"/>`;
     // islotes
-    [[160, 170, 38, 26, 5], [1090, 300, 30, 20, 8], [230, 680, 26, 16, 11], [1010, 720, 22, 14, 3]].forEach(([x, y, a, b, sd]) => {
+    [[92, 250, 34, 24, 5], [1100, 300, 30, 20, 8], [230, 660, 26, 16, 11]].forEach(([x, y, a, b, sd]) => {
       const d = blob(x, y, a, b, 14, 0.2, sd);
       s += `<path d="${d}" transform="translate(${x} ${y}) scale(1.3) translate(${-x} ${-y})" fill="#FFE9A8" opacity=".95"/>`;
       s += `<path d="${d}" fill="url(#mLand)" stroke="${INK}" stroke-width="2.4"/>`;
     });
 
     // montañas (cueva del invierno)
-    [[225, 320, 42], [262, 290, 50], [340, 300, 56], [395, 330, 36], [290, 345, 34], [195, 370, 30]].forEach(([x, y, z]) => s += mountain(x, y, z, R));
-    s += `<path d="M282,340 q18,-36 36,0 z" fill="#14234B" stroke="${INK}" stroke-width="2"/>`;
-    s += `<g fill="#ffffff">${[0, 1, 2, 3, 4].map(i => `<circle cx="${270 + i * 14}" cy="${246 + (i % 2) * 10}" r="2.2"/>`).join('')}</g>`;
+    [[275, 262, 40], [312, 232, 48], [388, 242, 54], [432, 270, 34], [340, 286, 32], [258, 300, 26]].forEach(([x, y, z]) => s += mountain(x, y, z, R));
+    s += `<path d="M332,281 q18,-36 36,0 z" fill="#14234B" stroke="${INK}" stroke-width="2"/>`;
+    s += `<g fill="#ffffff">${[0, 1, 2, 3, 4].map(i => `<circle cx="${320 + i * 14}" cy="${186 + (i % 2) * 10}" r="2.2"/>`).join('')}</g>`;
     // bosques
     const forest = (x0, y0, n, spread) => { let o = ''; for (let i = 0; i < n; i++) o += tree(f1(x0 + (R() - 0.5) * spread), f1(y0 + (R() - 0.5) * spread * 0.6), 14 + R() * 6); return o; };
-    s += forest(640, 320, 9, 110) + forest(500, 470, 8, 90) + forest(860, 380, 6, 80) + forest(560, 680, 5, 80) + forest(290, 470, 7, 100);
+    s += forest(715, 440, 7, 90) + forest(480, 440, 7, 90) + forest(600, 660, 6, 110) + forest(880, 172, 4, 80) + forest(420, 520, 3, 40);
     // palmeras en la costa
-    s += palm(200, 520, 26) + palm(232, 548, 22, true) + palm(1000, 290, 24, true) + palm(870, 690, 26) + palm(660, 150, 22);
+    s += palm(398, 600, 26) + palm(800, 560, 22, true) + palm(930, 335, 24, true) + palm(668, 700, 24) + palm(262, 348, 22);
 
     // 1 · Cueva (montañas ya dibujadas) — 2 · Trono
-    s += `<g transform="translate(520 232)">
+    s += `<g transform="translate(600 330)">
       <path d="M-26,18 v-48 q26,-30 52,0 v48" fill="#FFC93C" stroke="${INK}" stroke-width="3"/>
       <path d="M-18,-26 q18,-18 36,0" fill="none" stroke="${INK}" stroke-width="1.5"/>
       <circle cx="0" cy="-34" r="4" fill="${RED}" stroke="${INK}" stroke-width="1.2"/>
@@ -170,25 +170,25 @@ window.MapArt = (function () {
       <path d="M-34,10 v-14 h-8 v26 M34,10 v-14 h8 v26" fill="none" stroke="${INK}" stroke-width="2.5"/>
       <path d="M-28,22 v18 M28,22 v18" stroke="${INK}" stroke-width="3"/></g>`;
     // 3 · Lago
-    s += `<g transform="translate(815 262)">
+    s += `<g transform="translate(855 250)">
       <ellipse rx="78" ry="42" fill="#DDF8FF" stroke="${INK}" stroke-width="3"/>
       ${[0.75, 0.5, 0.26].map(k => `<ellipse rx="${78 * k}" ry="${42 * k}" fill="none" stroke="#7FD6F5" stroke-width="2.5" opacity=".9"/>`).join('')}
       <path d="M-10,-4 l10,-14 l10,14 z" fill="${RED}" stroke="${INK}" stroke-width="1.8"/><path d="M-14,-4 h28 l-5,7 h-18z" fill="#FFC93C" stroke="${INK}" stroke-width="1.5"/></g>`;
     // 4 · Remolino
-    let sp = 'M975,470';
-    for (let th = 0.3; th < Math.PI * 6.2; th += 0.25) sp += ` L${f1(975 + Math.cos(th) * th * 3.1)},${f1(470 + Math.sin(th) * th * 2.4)}`;
-    s += `<ellipse cx="975" cy="470" rx="70" ry="54" fill="#3DB8EE" stroke="${INK}" stroke-width="3"/>`;
+    let sp = 'M965,515';
+    for (let th = 0.3; th < Math.PI * 6.2; th += 0.25) sp += ` L${f1(965 + Math.cos(th) * th * 3.1)},${f1(515 + Math.sin(th) * th * 2.4)}`;
+    s += `<ellipse cx="965" cy="515" rx="70" ry="54" fill="#3DB8EE" stroke="${INK}" stroke-width="3"/>`;
     s += `<path d="${sp}" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round"/>`;
-    s += `<circle cx="975" cy="470" r="9" fill="${INK}"/><circle cx="975" cy="470" r="4" fill="#ffffff"/>`;
+    s += `<circle cx="965" cy="515" r="9" fill="${INK}"/><circle cx="965" cy="515" r="4" fill="#ffffff"/>`;
     // 5 · Reino de bolsillo (torre)
-    s += `<g transform="translate(745 600)">
+    s += `<g transform="translate(720 585)">
       <path d="M-24,30 v-62 h-6 v-14 h10 v8 h8 v-8 h8 v8 h8 v-8 h8 v8 h8 v-8 h10 v14 h-6 v62 z" fill="#FFB7D2" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
       <path d="M-8,30 v-16 q8,-12 16,0 v16" fill="${INK}"/>
       <rect x="-5" y="-26" width="10" height="14" rx="5" fill="${INK}"/>
       <path d="M0,-46 v-30" stroke="${INK}" stroke-width="2.2"/><path d="M0,-76 l30,8 l-30,8 z" fill="${RED}" stroke="${INK}" stroke-width="1.6"/>
       ${[-16, -2, 12].map(x => `<path d="M${x},${-8} h6 M${x},${4} h6" stroke="${INK}" stroke-width="1" opacity=".6"/>`).join('')}</g>`;
     // 6 · Guardián de los sueños (luna)
-    s += `<g transform="translate(395 575)">
+    s += `<g transform="translate(480 575)">
       <path d="M8,-44 A44,44 0 1 0 8,44 A34,44 0 1 1 8,-44 Z" fill="#FFE27A" stroke="${INK}" stroke-width="3"/>
       <circle cx="-14" cy="-6" r="3" fill="${INK}" opacity=".5"/><circle cx="-20" cy="16" r="5" fill="${INK}" opacity=".18"/>
       ${[[40, -34, 9], [56, 4, 6], [34, 30, 7]].map(([x, y, r]) => `<path d="M${x},${y - r} L${x + r * 0.3},${y - r * 0.3} L${x + r},${y} L${x + r * 0.3},${y + r * 0.3} L${x},${y + r} L${x - r * 0.3},${y + r * 0.3} L${x - r},${y} L${x - r * 0.3},${y - r * 0.3}Z" fill="#ffffff" stroke="${INK}" stroke-width="1.8"/>`).join('')}
@@ -200,18 +200,18 @@ window.MapArt = (function () {
            <path d="M${X.x - 26},${X.y - 26} L${X.x + 26},${X.y + 26} M${X.x + 26},${X.y - 26} L${X.x - 26},${X.y + 26}" stroke="${RED}" stroke-width="11" stroke-linecap="round"/></g>`;
 
     // etiquetas
-    s += label(300, 395, 'Cueva del Invierno Eterno');
-    s += label(520, 300, 'Trono de los Mil Bostezos');
-    s += label(815, 335, 'Lago Blanco');
-    s += label(975, 555, 'Remolino del Cíclope');
-    s += label(745, 660, 'Reino de Bolsillo');
-    s += label(395, 650, 'Guardián de los Sueños');
-    s += label(600, 485, 'Aquí yace el Tesoro', 26);
-    s += label(150, 470, 'Mar de las Medias Perdidas', 20, -72);
+    s += label(345, 340, 'Cueva del Invierno Eterno');
+    s += label(600, 398, 'Trono de los Mil Bostezos');
+    s += label(855, 325, 'Lago Blanco');
+    s += label(965, 440, 'Remolino del Cíclope');
+    s += label(720, 645, 'Reino de Bolsillo');
+    s += label(480, 648, 'Guardián de los Sueños');
+    s += label(600, 540, 'Aquí yace el Tesoro', 26);
+    s += label(150, 500, 'Mar de las Medias Perdidas', 20, -72);
     s += label(1110, 420, 'Océano Ohana', 24, 78);
 
     // barco
-    s += `<g transform="translate(1040 120)">
+    s += `<g transform="translate(1088 140)">
       <path d="M-62,40 Q0,70 62,40 L52,58 Q0,78 -52,58 Z" fill="#D98A45" stroke="${INK}" stroke-width="3"/>
       <path d="M-20,40 V-40 M18,40 V-56" stroke="${INK}" stroke-width="2.6"/>
       <path d="M-46,-32 Q-20,-20 6,-32 L4,30 Q-20,20 -44,30 Z" fill="#ffffff" stroke="${INK}" stroke-width="2.5"/>
@@ -225,7 +225,7 @@ window.MapArt = (function () {
       <path d="M-40,8 q10,-6 20,0 q10,-6 20,0 q10,-6 20,0 q10,-6 20,0 q10,-6 20,0 q10,-6 20,0 q10,-6 20,0 q10,-6 20,0" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/></g>`;
 
     // cartela de título
-    s += `<g transform="translate(225 85)">
+    s += `<g transform="translate(600 80)">
       <rect x="-176" y="-36" width="352" height="88" rx="26" fill="${INK}"/>
       <rect x="-176" y="-44" width="352" height="88" rx="26" fill="#ffffff" stroke="${INK}" stroke-width="4"/>
       <text y="-12" text-anchor="middle" font-family="${TITLE}" font-weight="600" font-size="15" letter-spacing="3" fill="${INK}">MAPA DE LA EXPEDICIÓN</text>
