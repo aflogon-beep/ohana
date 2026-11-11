@@ -45,7 +45,7 @@ window.OHANA = {
   ],
   firma: 'Con todo nuestro amor,<br>Julia y Alberto',
 
-  toquesCofre: 100,
+  toquesCofre: 200,
   pinPadres: '1911',
 
   // Frase que se va revelando, una palabra por fragmento

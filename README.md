@@ -1,6 +1,6 @@
 # La Expedición Ohana
 
-Búsqueda del tesoro familiar para tablet: 6 enigmas, 6 fragmentos de mapa, un puzzle, un cofre de 100 toques y un premio.
+Búsqueda del tesoro familiar para tablet: 6 enigmas, 6 fragmentos de mapa, un puzzle, un cofre de 200 toques y un premio.
 
 > ⚠️ **Spoilers**: este README y `js/config.js` contienen las soluciones. ¡No dejéis que lo lean los exploradores!
 
