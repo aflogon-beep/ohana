@@ -214,6 +214,7 @@ window.Sound = (function () {
       [62, 69, 74, 78, 81].forEach((m, i) => bell(m, t + 1.3 + i * 0.05, 0.07, sfxBus, 3));
       pad([62, 66, 69, 74], t + 1.3, 2.4, 0.05, sfxBus);
     },
+    turn() { const t = ctx.currentTime; [76, 81, 88].forEach((m, i) => bell(m, t + i * 0.1, 0.08, sfxBus, 1.2)); },
     hint() { const t = ctx.currentTime; for (let i = 0; i < 7; i++) bell(84 + Math.floor(Math.random() * 12), t + i * 0.06, 0.035); },
     pick() { const t = ctx.currentTime; noiseSweep(t, 0.22, 600, 2500, 0.06); },
     snap() {

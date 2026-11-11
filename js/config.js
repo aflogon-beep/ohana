@@ -6,6 +6,15 @@
 window.OHANA = {
   jugadores: ['Emma', 'Álvaro'],
 
+  // Turnos: alterna quién resuelve cada enigma y quién coloca cada pieza del puzzle.
+  // «empieza» es quien lleva el primer enigma. Con activo: false se juega sin turnos.
+  turnos: { activo: true, empieza: 'Emma' },
+  // Color de cada jugador (ficha de turno, cartel y bordes)
+  colores: {
+    'Emma': '#FF6B5E',
+    'Álvaro': '#12B5BA'
+  },
+
   // Imágenes opcionales (si no existen, se muestra un medallón con la inicial)
   avatares: {
     'Emma': 'assets/emma.png',

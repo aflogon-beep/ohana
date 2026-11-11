@@ -3,39 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#120a05">
+<meta name="theme-color" content="#3DB8EE">
 <meta name="mobile-web-app-capable" content="yes">
 <title>La Expedición Ohana</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700;900&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Great+Vibes&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/fredoka.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/nunito.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<!-- Filtros SVG globales y el arte del mapa (se reutiliza en piezas y puzzle) -->
+<!-- Definiciones SVG globales: aquí se inyecta el arte del mapa (se reutiliza en piezas y puzzle) -->
 <svg id="globalDefs" width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="7" result="n"/>
-      <feDisplacementMap in="SourceGraphic" in2="n" scale="14" xChannelSelector="R" yChannelSelector="G"/>
-    </filter>
-    <filter id="inkBleed" x="-5%" y="-5%" width="110%" height="110%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"/>
-      <feDisplacementMap in="SourceGraphic" in2="n" scale="1.6"/>
-    </filter>
+    <symbol id="cloud" viewBox="0 0 220 90">
+      <path d="M40,82 a30,30 0 0 1 -4,-59 a44,44 0 0 1 82,-8 a34,34 0 0 1 58,14 a27,27 0 0 1 4,53 z" fill="#fff"/>
+    </symbol>
+    <symbol id="palmIsle" viewBox="0 0 400 300">
+      <ellipse cx="200" cy="300" rx="210" ry="74" fill="#FFE29A"/>
+      <ellipse cx="200" cy="304" rx="150" ry="46" fill="#FFD071"/>
+      <path d="M176,250 q-14,-90 20,-164" fill="none" stroke="#B5682F" stroke-width="15" stroke-linecap="round"/>
+      <path d="M176,250 q-14,-90 20,-164" fill="none" stroke="#D98A45" stroke-width="6" stroke-linecap="round" stroke-dasharray="3 15"/>
+      <g fill="#2FBF71" stroke="#1E9655" stroke-width="4" stroke-linejoin="round">
+        <path d="M196,88 q-70,-48 -128,2 q64,-14 128,-2z"/>
+        <path d="M196,88 q-36,-80 -100,-64 q62,12 100,64z"/>
+        <path d="M196,88 q70,-52 132,-6 q-66,-12 -132,6z"/>
+        <path d="M196,88 q30,-84 96,-74 q-60,16 -96,74z"/>
+        <path d="M196,88 q-10,-58 14,-84 q10,42 -14,84z"/>
+      </g>
+      <circle cx="190" cy="96" r="9" fill="#8A4B1E"/><circle cx="206" cy="100" r="8" fill="#8A4B1E"/>
+    </symbol>
   </defs>
 </svg>
 
 <div id="ambient" aria-hidden="true">
-  <div class="bg-base"></div>
-  <div class="rays"></div>
-  <div class="torch torch-l"></div>
-  <div class="torch torch-r"></div>
+  <div class="sky"></div>
+  <div class="sky sunset"></div>
+  <div class="sun"><div class="sun-rays"></div><div class="sun-disc"></div></div>
+  <svg class="cloud c1"><use href="#cloud"/></svg>
+  <svg class="cloud c2"><use href="#cloud"/></svg>
+  <svg class="cloud c3"><use href="#cloud"/></svg>
+  <div class="sea">
+    <div class="wave w3"></div>
+    <svg class="boat" viewBox="0 0 120 110"><path d="M58,8 V78" stroke="#14234B" stroke-width="5" stroke-linecap="round"/><path d="M64,12 L104,70 H64Z" fill="#fff" stroke="#14234B" stroke-width="4" stroke-linejoin="round"/><path d="M52,24 L22,70 H52Z" fill="#FF6B5E" stroke="#14234B" stroke-width="4" stroke-linejoin="round"/><path d="M10,80 H110 L96,102 H24Z" fill="#FFC93C" stroke="#14234B" stroke-width="4" stroke-linejoin="round"/></svg>
+    <div class="wave w2"></div>
+    <svg class="isle isle-l"><use href="#palmIsle"/></svg>
+    <svg class="isle isle-r"><use href="#palmIsle"/></svg>
+    <div class="wave w1"></div>
+  </div>
   <canvas id="dust"></canvas>
-  <div class="vignette"></div>
 </div>
 
 <!-- HUD -->
@@ -44,53 +61,52 @@
     <svg viewBox="0 0 100 100"><use href="#compassIcon"/></svg>
   </button>
   <div id="medals"></div>
-  <button id="soundBtn" class="hud-sound" aria-label="Sonido"></button>
+  <div class="hud-right">
+    <div id="turnChip" class="turn-chip hidden" aria-live="polite"></div>
+    <button id="soundBtn" class="hud-sound" aria-label="Sonido"></button>
+  </div>
 </header>
 
 <main id="stage">
 
   <!-- INTRO -->
   <section id="s-intro" class="scene">
-    <div class="intro-compass" aria-hidden="true">
-      <svg viewBox="0 0 100 100"><use href="#compassIcon"/></svg>
-    </div>
     <div id="introMascots"></div>
     <div class="intro-content">
       <p class="kicker">Una aventura para <span id="introNames"></span></p>
-      <h1 class="title-gold"><span>La Expedición</span><span class="big">Ohana</span></h1>
-      <div class="divider"><i></i><b>✦</b><i></i></div>
+      <h1 class="title intro-title"><span class="pre">La Expedición</span><span class="big" aria-label="Ohana"><i>O</i><i>h</i><i>a</i><i>n</i><i>a</i></span></h1>
       <p class="tagline">Seis enigmas. Seis fragmentos. Un tesoro.</p>
-      <button id="btnStart" class="btn-gold big">Comenzar la aventura</button>
-      <button id="btnRestart" class="btn-ghost hidden">Empezar desde el principio</button>
+      <button id="btnStart" class="btn btn-primary big">Comenzar la aventura</button>
+      <button id="btnRestart" class="btn btn-ghost hidden">Empezar desde el principio</button>
     </div>
   </section>
 
   <!-- CARTA -->
   <section id="s-story" class="scene">
-    <div class="parchment letter">
+    <div class="card letter">
       <div class="seal" aria-hidden="true"><span>O</span></div>
       <div class="avatars" id="avatars"></div>
       <div id="letterText" class="letter-text"></div>
-      <button id="btnAccept" class="btn-gold hidden">Aceptamos la misión</button>
+      <button id="btnAccept" class="btn btn-primary hidden">Aceptamos la misión</button>
     </div>
   </section>
 
   <!-- PISTA -->
   <section id="s-clue" class="scene">
-    <div class="parchment clue">
+    <div class="card clue">
       <p class="clue-num" id="clueNum"></p>
       <h2 class="clue-title" id="clueTitle"></h2>
-      <div class="divider ink"><i></i><b>❦</b><i></i></div>
+      <div class="roles hidden" id="roles"></div>
       <div class="riddle" id="riddle"></div>
       <div class="hints" id="hints"></div>
-      <button id="btnHint" class="btn-ink">✧ Necesitamos una ayuda</button>
+      <button id="btnHint" class="btn btn-soft small">✧ Necesitamos una ayuda</button>
       <div id="clueMascot"></div>
     </div>
     <form id="codeForm" class="code-box" autocomplete="off">
-      <label for="codeInput">Código secreto del fragmento</label>
+      <label for="codeInput" id="codeLabel">Código secreto del fragmento</label>
       <div class="code-row">
         <input id="codeInput" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="16" placeholder="· · · · · ·">
-        <button type="submit" class="btn-gold">Descifrar</button>
+        <button type="submit" class="btn btn-primary">Descifrar</button>
       </div>
       <p id="codeMsg" class="code-msg" aria-live="polite"></p>
     </form>
@@ -98,18 +114,18 @@
 
   <!-- PUZZLE -->
   <section id="s-puzzle" class="scene">
-    <div class="puzzle-head">
-      <h2 class="title-gold small">Reconstruid el mapa</h2>
-      <p class="sub">Arrastrad cada fragmento a su sitio</p>
+    <div class="puzzle-head stagger">
+      <h2 class="title small">Reconstruid el mapa</h2>
+      <p class="sub" id="puzzleSub">Arrastrad cada fragmento a su sitio</p>
     </div>
     <div id="puzzleWrap"></div>
-    <button id="btnToChest" class="btn-gold big hidden">¡Seguir el mapa hasta la X!</button>
+    <button id="btnToChest" class="btn btn-primary big hidden">¡Seguir el mapa hasta la X!</button>
   </section>
 
   <!-- COFRE -->
   <section id="s-chest" class="scene">
-    <div class="chest-head">
-      <h2 class="title-gold small" id="chestTitle">El Cofre Ohana</h2>
+    <div class="chest-head stagger">
+      <h2 class="title small" id="chestTitle">El Cofre Ohana</h2>
       <p class="sub" id="chestSub">Está sellado con cadenas antiguas… ¡Golpeadlo entre los dos para romperlas!</p>
     </div>
     <div id="chestWrap">
@@ -132,7 +148,7 @@
     <div class="castle" id="castle"></div>
     <div class="reveal-content">
       <p class="kicker reveal-step">El tesoro de la Expedición Ohana es…</p>
-      <h1 class="title-gold reveal-title reveal-step" id="revealTitle"></h1>
+      <h1 class="title reveal-title reveal-step" id="revealTitle"></h1>
       <div class="ticket reveal-step" id="ticket"></div>
       <div class="mascot-row reveal-step" id="revealMascots"></div>
       <section class="keepsake reveal-step" id="keepsake">
@@ -154,37 +170,46 @@
     <div class="ov-piece" id="ovPiece"></div>
     <div class="ov-word" id="ovWord"></div>
     <div class="ov-phrase" id="ovPhrase"></div>
-    <button id="btnNext" class="btn-gold big"></button>
+    <button id="btnNext" class="btn btn-primary big"></button>
   </div>
 </div>
 
 <!-- Panel de padres -->
 <div id="parentPanel" class="overlay hidden">
-  <div class="parchment panel">
+  <div class="card panel">
     <h3>Cuaderno del jefe de expedición</h3>
     <div id="pinStep">
       <p>Introduce el PIN</p>
       <input id="pinInput" type="password" inputmode="numeric" maxlength="6">
-      <button id="pinOk" class="btn-ink">Entrar</button>
+      <button id="pinOk" class="btn btn-soft small">Entrar</button>
     </div>
     <div id="parentTools" class="hidden">
       <div id="parentCodes"></div>
       <div class="tools">
-        <button data-act="skip" class="btn-ink">Saltar pista actual</button>
-        <button data-act="puzzle" class="btn-ink">Ir al puzzle</button>
-        <button data-act="chest" class="btn-ink">Ir al cofre</button>
-        <button data-act="reveal" class="btn-ink">Ir al premio</button>
-        <button data-act="reset" class="btn-ink danger">Reiniciar todo</button>
+        <button data-act="skip" class="btn btn-soft small">Saltar pista actual</button>
+        <button data-act="puzzle" class="btn btn-soft small">Ir al puzzle</button>
+        <button data-act="chest" class="btn btn-soft small">Ir al cofre</button>
+        <button data-act="reveal" class="btn btn-soft small">Ir al premio</button>
+        <button data-act="reset" class="btn btn-soft small danger">Reiniciar todo</button>
       </div>
     </div>
-    <button id="parentClose" class="btn-ghost dark">Cerrar</button>
+    <button id="parentClose" class="btn btn-soft">Cerrar</button>
+  </div>
+</div>
+
+<!-- Cartel de cambio de turno -->
+<div id="turnBanner" class="turn-banner hidden" aria-live="assertive">
+  <div class="tb-card">
+    <div class="tb-av" id="tbAv"></div>
+    <p class="tb-k" id="tbKicker"></p>
+    <p class="tb-name" id="tbName"></p>
+    <p class="tb-sub" id="tbSub"></p>
   </div>
 </div>
 
 <canvas id="fx"></canvas>
 
 <script src="js/config.js"></script>
-<script src="js/textures.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/map.js"></script>
 <script src="js/fx.js"></script>
