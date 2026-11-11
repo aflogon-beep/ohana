@@ -41,7 +41,7 @@ window.FX = (function () {
   const c = document.getElementById('fx'), g = c.getContext('2d');
   function sizeFx() { c.width = innerWidth * DPR; c.height = innerHeight * DPR; }
   sizeFx();
-  let parts = [], rockets = [], fireworksOn = false, fwTimer = 0;
+  let parts = [], rockets = [], fireworksOn = false, fwDay = false, fwTimer = 0;
 
   const SPARK_COLS = ['#FFC93C', '#FF6B5E', '#18C5C9', '#2FBF71', '#FF8FB8', '#ffffff', '#7B5CFF'];
   function sparks(x, y, n = 18, opt = {}) {
@@ -68,8 +68,8 @@ window.FX = (function () {
   }
   function burst(x, y, shape) {
     const hue = Math.random() * 360;
-    const pal = [`hsl(${hue},100%,65%)`, `hsl(${(hue + 40) % 360},100%,75%)`, '#fff6d8'];
-    const push = (vx, vy, col) => parts.push({ x, y, vx, vy, life: 1, decay: 0.009 + Math.random() * 0.008, size: 2.6 * DPR, color: col, g: 0.04 * DPR, type: 'spark', drag: 0.975, trail: true });
+    const pal = fwDay ? [`hsl(${hue},95%,54%)`, `hsl(${(hue + 40) % 360},100%,60%)`, '#ffffff'] : [`hsl(${hue},100%,65%)`, `hsl(${(hue + 40) % 360},100%,75%)`, '#fff6d8'];
+    const push = (vx, vy, col) => parts.push({ x, y, vx, vy, life: 1, decay: 0.009 + Math.random() * 0.008, size: (fwDay ? 4.6 : 2.6) * DPR, color: col, g: 0.04 * DPR, type: 'spark', drag: 0.975, trail: true });
     if (shape === 'ears') {
       // tres círculos: cabeza y dos orejas
       [[0, 0, 1], [-0.95, -0.95, 0.62], [0.95, -0.95, 0.62]].forEach(([ox, oy, k], j) => {
@@ -101,18 +101,19 @@ window.FX = (function () {
     const r = Math.random();
     rockets.push({ x, y: c.height, vx: (Math.random() - 0.5) * 1.5 * DPR, vy: -(10 + Math.random() * 4) * DPR, ty: (0.12 + Math.random() * 0.3) * c.height, shape: r < 0.28 ? 'ears' : r < 0.42 ? 'heart' : 'round' });
   }
-  function startFireworks() { fireworksOn = true; }
+  // day: sobre cielo claro se pintan opacos y con colores más saturados (la mezcla aditiva los quemaría a blanco)
+  function startFireworks(opt = {}) { fireworksOn = true; fwDay = !!opt.day; }
   function stopFireworks() { fireworksOn = false; }
 
   function drawFx() {
     g.clearRect(0, 0, c.width, c.height);
-    const BLEND = fireworksOn ? 'lighter' : 'source-over'; // aditiva solo de noche: sobre cielo claro quemaría a blanco
+    const BLEND = fireworksOn && !fwDay ? 'lighter' : 'source-over'; // aditiva solo de noche: sobre cielo claro quemaría a blanco
     if (fireworksOn && --fwTimer <= 0) { launch(); fwTimer = 35 + Math.random() * 55; }
     g.globalCompositeOperation = BLEND;
     for (let i = rockets.length - 1; i >= 0; i--) {
       const r = rockets[i];
       r.x += r.vx; r.y += r.vy; r.vy += 0.12 * DPR;
-      parts.push({ x: r.x, y: r.y, vx: (Math.random() - 0.5) * DPR, vy: DPR, life: 0.7, decay: 0.04, size: 2 * DPR, color: '#ffd38a', g: 0, type: 'spark', drag: 0.9 });
+      parts.push({ x: r.x, y: r.y, vx: (Math.random() - 0.5) * DPR, vy: DPR, life: 0.7, decay: 0.04, size: (fwDay ? 3 : 2) * DPR, color: fwDay ? '#ffffff' : '#ffd38a', g: 0, type: 'spark', drag: 0.9 });
       if (r.y <= r.ty || r.vy >= 0) { burst(r.x, r.y, r.shape); rockets.splice(i, 1); }
     }
     for (let i = parts.length - 1; i >= 0; i--) {
